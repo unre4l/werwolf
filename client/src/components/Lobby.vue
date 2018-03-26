@@ -1,16 +1,20 @@
 <template>
   <div class="lobby">
     <h1>lobby</h1>
+  
   </div>
 </template>
 
 <script>
 export default {
   name: 'Lobby',
-  computed: {
-    count () {
-      return store.state.count
+  data(){
+    return {
     }
+  },
+  methods: {
+  },
+  mounted(){
   }
 }
 </script>

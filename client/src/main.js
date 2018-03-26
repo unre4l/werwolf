@@ -1,50 +1,16 @@
 /* eslint-disable */
-
-import { sync } from 'vuex-router-sync'
 import Vue from 'vue'
+import store from './store'
+import router from './router'
+import { sync } from 'vuex-router-sync'
 import App from './App.vue'
-import Vuex from 'vuex'
-import VueRouter from 'vue-router'
-import Lobby from './components/Lobby.vue'
-import Game from './components/Game.vue'
 import VueNativeSock from 'vue-native-websocket'
+import Vue2TouchEvents from 'vue2-touch-events'
 
-Vue.use(VueRouter)
-Vue.use(Vuex)
-Vue.use(VueNativeSock, 'ws://localhost:9090', { store: store, format: 'json' })
 
-const router = new VueRouter({
-  routes: [
-    { path: '/', component: Lobby },
-    { path: '/lobby', component: Lobby },
-    { path: '/game', component: Game }
-  ]
-})
-
-const store = new Vuex.Store({
-  state: {
-    players: [],
-    socket: {
-      isConnected: false,
-      message: '',
-      reconnectError: false,
-    }
-  },
-  mutations: {
-    SOCKET_ONOPEN(state, event) {
-      state.socket.isConnected = true
-    },
-    SOCKET_ONCLOSE(state, event) {
-      state.socket.isConnected = false
-    },
-    SOCKET_ONERROR(state, event) {
-      console.error(state, event)
-    },
-    SOCKET_ONMESSAGE(state, message) {
-      state.message = message
-    }
-  }
-})
+// Vue.use(VueNativeSock, 'ws://localhost:40512', { format: 'json' })
+Vue.use(VueNativeSock, 'wss://iamjonathan.de/werwolf/ws', { format: 'json' })
+Vue.use(Vue2TouchEvents)
 
 const unsync = sync(store, router)
 
