@@ -8,7 +8,10 @@ export default new Vuex.Store({
     state: {
         game: {
             players: [],
-            id: ''
+            id: '',
+            minPlayerCount: 0,
+            werewolfCount: 1,
+            flow: 0
         },
         my: {
             id: '',
@@ -21,11 +24,28 @@ export default new Vuex.Store({
         isConnected: false
     },
     mutations: {
+        toggleReady(state){
+            for (let i = 0; i < state.game.players.length; i++) {
+                const player = state.game.players[i];
+                if (player.id === state.my.id){
+                    player.ready = player.ready ? false : true
+                    state.game.players.splice(i, 1, player)
+                    return
+                }
+            }
+        },
+        decreaseWerwolf(state) {
+            state.game.werewolfCount = state.game.werewolfCount > 1 ? state.game.werewolfCount - 1 : state.game.werewolfCount
+        },
+        increaseWerwolf(state) {
+            state.game.werewolfCount = state.game.werewolfCount + 1
+        },
         setGameState(state, gameState) {
+            // if (state.game.flow < gameState.flow){
             state.game = gameState
+            // }
         },
         setMyName(state, name) {
-    
             state.my.name = name
         },
         setMyLocation(state, location) {
@@ -42,8 +62,23 @@ export default new Vuex.Store({
         }
     },
     getters: {
+        playerReadyCount: state => {
+            return state.game.players.filter(player => player.ready).length
+        },
+        werewolfCount: state => {
+            return state.game.werewolfCount
+        },
+        playerCount: state => {
+            return state.game.players.length
+        },
+        myReadyState: state => {
+            return state.game.players.find(player => player.id === state.my.id).ready
+        },
         gameId: state => {
             return state.game.id
+        },
+        gameName: state => {
+            return state.game.name
         },
         myLocation: state => {
             return state.my.location

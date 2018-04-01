@@ -1,25 +1,26 @@
 <template>
-  <div class="player" :class="{active: active}">
-        <div class="player-name-container" >
-            <div class="player-name" :class="{me: isThisMe, edit: editMode}" @dblclick="enterEditMode" v-touch:longtap="enterEditMode">
-                <div class="form" @keyup.enter="changeName">
-                    <input v-model="editedName" :placeholder="name" @focusout="changeName" ref="editmask">
-                </div>
-                <span>{{name}}</span>
+    <div class="player" :class="{active: active, ready: ready}">
+        <div class="player-name" :class="{me: isThisMe, edit: editMode, error: invalidName}" @dblclick="enterEditMode" v-touch:longtap="enterEditMode">
+            <div class="form" @keyup.enter="changeName">
+                <input v-model="editedName" :placeholder="name" @focusout="changeName" ref="editmask">
             </div>
-      </div>
-  </div>
+            <span>{{name}}</span>
+        </div>
+
+        <div class="player-avatar"></div>
+    </div>
 </template>
 
 <script>
 export default {
     name: 'Player',
-    props: ['name', 'alive', 'position', 'role', 'playerId', 'active'],
+    props: ['name', 'alive', 'position', 'role', 'playerId', 'active', 'ready'],
     data(){
         return {
             isThisMe: false,
             editedName: '',
-            editMode: false
+            editMode: false,
+            invalidName: false
         }
     },
     computed: {
@@ -41,9 +42,16 @@ export default {
             this.$refs.editmask.focus()
         },
         changeName(){
+            if(this.editedName.length > 0 && this.editedName.length < 3){
+                this.invalidName = true
+                return
+            }
+            this.invalidName = false
             this.editMode = false
-            this.$store.commit('setMyName', this.editedName);
-            this.$socket.sendObj({type: 'newPlayerName', playerId: this.myId, name: this.editedName })
+            if(this.editedName.length > 0){
+                this.$store.commit('setMyName', this.editedName);
+                this.$socket.sendObj({type: 'newPlayerName', playerId: this.myId, name: this.editedName })
+            }
             this.$refs.editmask.blur()
         }
     }
@@ -53,48 +61,42 @@ export default {
 <style lang="sass" scoped>
 .player
     position: relative
-    border-radius: 50%
-    height: 5em
-    width: 5em
-    background: url('../assets/bauer.png')
-    background-size: cover
+    text-align: center
+    flex: 0 1 auto
     margin: 1em
-    display: inline-block
-    line-height: 1
     opacity: .4
 
     &.active
         opacity: 1
-    
-    .me
-        background: #687a6c
-        color: white
 
-    .form
-        overflow: hidden
-        height: 0 
-        width: 0
-        margin: 0
-        padding: 0
+    &.ready
+        .player-avatar
+            &::after
+                content: ''
+                background: green
+                opacity: .5
+                position: absolute
+                top: 0
+                height: 100%
+                left: 0
+                width: 100%
+                border-radius: 50%
+                z-index: 2
+
+    &-avatar
+        border-radius: 50%
+        height: 5em
+        width: 5em
+        background: url('../assets/bauer.png')
+        background-size: cover
+        display: block
+        line-height: 1
+        margin: 0 auto
         position: relative
-        z-index: 0
-
-    .edit
-        background: #b5be7f
-        color: black
-
-        span
-            display: none
         
-        .form
-            height: auto
-            width: auto
-            z-index: 1
-
     &-name
         display: inline-block
         padding: .3em
-        background: white
         white-space: nowrap
         line-height: 1
         font-size: .9em
@@ -102,15 +104,56 @@ export default {
         box-shadow: 3px 3px 6px rgba(black, .2)  
         user-select: none
         cursor: pointer
+        position: relative
+
+        &.me
+            background: #687a6c
+            color: white
+
+        .form
+            overflow: hidden
+            height: 0 
+            width: 0
+            margin: 0
+            padding: 0
+            position: relative
+            z-index: 0
+
+        &.edit
+            background: #b5be7f
+            color: black
+
+            span
+                display: none
+                line-height: 1
+            
+            .form
+                height: auto
+                width: auto
+                display: block
+                z-index: 1
+                padding: 0
+                margin: 0
+
+    &.error
+        background: red
+        color: black
+
+    &-name
 
         input
-            width: 8em
+            width: 6em
             border: none
             background: none
             outline: none
+            padding: 0
+            margin: 0
+            line-height: 1
+            font-size: .9em
 
         &-container
             position: absolute
+            z-index: 4
             top: 0
             left: 50%
             text-align: center

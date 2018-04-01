@@ -16,17 +16,22 @@ class Director {
         if(msg.type === 'newPlayerName'){
             this.newPlayerName(msg, ws)
         }
+        if(msg.type === 'ready'){
+            this.ready(msg, ws)
+        }
+        if (msg.type === 'werwolfCount'){
+            this.werwolfCount(msg, ws)
+        }
     }
 
-    deactivate(ws){
+    leaveOrDeactivate(ws){
         for (let i = 0; i < this.games.length; i++) {
             const game = this.games[i]
-            if (game.deactivatePlayerByWs(ws)){
+            if (game.leaveOrDeactivatePlayerByWs(ws)){
                 return;
             }
         }
     }
-
 
     newPlayerName(msg, ws){
         const id = msg.playerId
@@ -50,6 +55,24 @@ class Director {
             game.addPlayer(new Player(id, name, ws))
         }
     }
+    
+    ready(msg, ws){
+        const playerId = msg.playerId
+        const gameId = msg.gameId
+        const ready = msg.ready
+
+        const game = this.getGameById(gameId)
+        game.setPlayerReady(playerId, ready)
+        game.deliverState()
+    }
+
+    werwolfCount(msg, ws){
+        const gameId = msg.gameId
+        const count = msg.count
+        const game = this.getGameById(gameId)
+        game.setWerwolfCount(count)
+        game.deliverState()
+    }
 
     reconnectPlayer(playerId, ws) {
         for (let i = 0; i < this.games.length; i++) {
@@ -63,6 +86,15 @@ class Director {
             }
         }
         return false     
+    }
+
+    getGameById(id) {
+        for (let i = 0; i < this.games.length; i++) {
+            const game = this.games[i]
+            if (game.isSame(id)) {
+                return game;
+            }
+        }
     }
 
     getGame(location) {

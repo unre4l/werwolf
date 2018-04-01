@@ -16,7 +16,8 @@ const director = new Director()
 wss.on('connection', ws => {
     console.log("connection (" + wss.clients.size + ")")
     ws.on('message', msg => director.handle(msg, ws))
-    ws.on('close', () => director.deactivate(ws))
+    ws.on('close', () => director.leaveOrDeactivate(ws))
+    ws.on('error', () => director.leaveOrDeactivate(ws))
 })
 
 console.log("running. " + config.port)

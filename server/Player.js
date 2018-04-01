@@ -7,6 +7,7 @@ class Player {
         this.role = 'none'
         this.alive = true
         this.active = true
+        this.ready = false
         this.position = {
             x: null,
             y: null
@@ -18,6 +19,12 @@ class Player {
     }
 
     deactivate(){
+        this.active = false
+    } 
+
+    leave(){
+        this.ws.close()
+        this.ws = null
         this.active = false
     } 
 
@@ -36,6 +43,10 @@ class Player {
         this.ws = ws
     }
 
+    setReady(ready){
+        this.ready = ready
+    }
+    
     getState(){
         return {
             id: this.id,
@@ -43,7 +54,8 @@ class Player {
             role: this.role,
             active: this.active,
             alive: this.alive,
-            position: this.position
+            position: this.position,
+            ready: this.ready
         }
     }
 

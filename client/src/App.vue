@@ -1,10 +1,34 @@
 <template>
   <div id="app">
-    <div class="game-lobby-title">
-      game: {{gameId}} - name: {{name}} - id: {{myId}}
+    <!-- <Feedback /> -->
+    <div class="meta">
+      <div>{{gameId}}</div>
+      <div>{{gameName}}</div>
+      <div>  {{playerCount}}/{{playerReadyCount}} <span class="playerleft">{{playerLeft}}</span></div>
+      <div>{{myId}}</div>
     </div>
 
-    <Player v-for="player in players" :name="player.name" :position="player.position" :active="player.active" :role="player.role" :alive="player.alive" :playerId="player.id" :key="player.playerId" />
+
+    <div class="werwolf-setting">
+      <table class="">
+        <tr>
+          <td class="werwolf-setting-decrease" @click="decreaseWerwolf">-</td>
+          <td>{{readableWerwolfCount}}</td>
+          <td class="werwolf-setting-increase" @click="increaseWerwolf">+</td>
+        </tr>
+      </table>
+    </div>
+
+      
+      
+
+    <div class="player-lobby">
+      <Player v-for="player in players" :name="player.name" :position="player.position" :active="player.active" :ready="player.ready" :role="player.role" :alive="player.alive" :playerId="player.id" :key="player.playerId" />
+    </div>
+
+    <div class="ready-action" @click="toggleReady">
+      <span>ready</span>
+    </div>
 
     <!-- <router-view></router-view> -->
   </div>
@@ -15,6 +39,7 @@
 import Cookies from 'js-cookie';
 import shortid from 'shortid'
 import Player from '@/components/Player'
+// import Feedback from '@/components/Feedback'
 import { mapMutations, mapGetters } from 'vuex';
 import names from './names.js'
 
@@ -33,7 +58,8 @@ function isFloat(n){
 export default {
   name: 'app',
   components: {
-    'Player': Player
+    'Player': Player,
+    // 'Feedback': Feedback
   },
   data(){
     return {
@@ -69,8 +95,25 @@ export default {
       'myId',
       'myName',
       'players',
-      'gameId'
+      'gameId',
+      'gameName',
+      'playerCount',
+      'werewolfCount',
+      'playerReadyCount',
+      'myReadyState'
     ]),
+    playerLeft(){
+      return this.playerCount < 8 ? '+' + (8-this.playerCount) : ''
+    },
+    readableWerwolfCount(){
+      let s = 'x '
+      if(this.werewolfCount === 1){
+        s += 'Werwolf'
+      }else{
+        s += 'Werwölfe'
+      }
+      return this.werewolfCount + s 
+    },
     name () {
       return this.myName ? this.myName : this.tmpName
     }
@@ -80,6 +123,25 @@ export default {
       'setGameState',
       'setMyName'
     ]),
+    closeTab(){
+      console.log("close")
+      window.close()
+    },
+    increaseWerwolf(){
+      this.$store.commit('increaseWerwolf');
+      this.$socket.sendObj({type: 'werwolfCount', gameId: this.gameId, count: this.werewolfCount })
+    },
+
+    decreaseWerwolf(){
+      if(this.werewolfCount > 1){
+        this.$store.commit('decreaseWerwolf');
+        this.$socket.sendObj({type: 'werwolfCount', gameId: this.gameId, count: this.werewolfCount })
+      }
+    },
+    toggleReady(){
+      this.$store.commit('toggleReady');
+      this.$socket.sendObj({type: 'ready', playerId: this.myId, gameId: this.gameId, ready: this.myReadyState })
+    },
 
     setMyId(){
       if(!Cookies.get('werwolf-playerId') || Cookies.get('werwolf-playerId').length > 20){
@@ -125,17 +187,114 @@ body
   margin: 0
   border: 0
   font-family: 'Open Sans', sans-serif
-  background: #f4f4f4
+
 
 #app
+  +desktop
+    max-width: 480px
+    margin: 40px auto
+    height: 720px
+    background: white
+    box-shadow: 0 0 35px rgba(black, .2)
+    position: relative
+
+  .playerleft
+    font-weight: 600
+    color: red
+  .player-lobby
+    display: flex
+    flex-wrap: wrap
+    flex-direction: row
+    justify-content: center
+
+  .meta
+    display: flex
+    font-size: .6em
+    margin: .7em
+    color: #333
+    font-weight: 300
+
+    div
+      flex: 1 
+      text-align: center
+      &:first-child
+        text-align: left
+      &:last-child
+        text-align: right
+  
+  .werwolf-setting
+    background: url('assets/blood.png') no-repeat
+    background-size: 100% 100%
+    height: 4.2em
+    color: white
+    font-weight: 600
+    font-size: 1.2em
+
+    table
+      position: relative
+      top: 1em
+      width: 100%
+
+      td
+        text-align: center
+        padding: 0 1em
+
+  .ready-action
+    position: absolute
+    bottom: 0
+    width: 100%
+    left: 0
+    padding: 2em 0
+    text-align: center
+    text-transform: uppercase
+    font-weight: 700
+
+  .lobby-name
+      text-align: center
+      font-weight: 600
+
   h1.title
       margin: 0
       padding: 0
       font-size: 1rem
 
+  .role-table
+    .role-action
+      font-size: 1em
+      text-align: center
+      line-height: 1
+
 .game-lobby
   &-title
-    text-align: center
+
+    table
+      border-collapse: collapse
+      width: 100%
+      border-top: 1px solid #ccc
+      border-bottom: 1px solid #ccc
+
+      tr
+        &+tr
+          td
+            border-top: 1px solid #ccc
+
+      td
+        padding: .25em
+        font-size: .5em
+
+        &+td
+          border-left: 1px solid #ccc
+
+    table + table
+      border-top: none
+
+    .meta-table
+      td:nth-child(even)
+        text-align: center
+        font-weight: 600
+      td:nth-child(odd)
+        font-weight: 300
+        text-align: left
     
   &-player
 

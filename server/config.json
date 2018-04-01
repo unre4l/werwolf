@@ -1,6 +1,7 @@
 {
     "port": 9988,
-    "wsport": 40512
+    "wsport": 40512,
+    "googleapikey": "AIzaSyAYPedO84D9IRrqbohGiCVXRlELg5bvIKU"
 }
 
 
